@@ -214,7 +214,7 @@ static int8_t commonInit(struct mgos_bme280* bme)
     return BME280_OK;
 }
 
-static int8_t setForcedMode(struct mgos_bme280* bme)
+int8_t setForcedMode(struct mgos_bme280* bme)
 {
 	int8_t rslt;
 	
