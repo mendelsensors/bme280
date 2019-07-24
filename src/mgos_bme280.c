@@ -214,6 +214,18 @@ static int8_t commonInit(struct mgos_bme280* bme)
     return BME280_OK;
 }
 
+static int8_t setForcedMode(struct mgos_bme280* bme)
+{
+	int8_t rslt;
+	
+    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &bme->dev);
+    if (BME280_OK != rslt) {
+        LOG(LL_INFO, ("Could not set sensor mode"));
+        return rslt;
+    }
+    return BME280_OK;
+}
+
 struct mgos_bme280* mgos_bme280_i2c_create(uint8_t addr)
 {
     // Is I2C enabled?
