@@ -70,6 +70,11 @@ void mgos_bme280_delete(struct mgos_bme280* bme);
 int8_t mgos_bme280_read(struct mgos_bme280* bme, struct mgos_bme280_data* data);
 
 /*
+ * MendelScience custom function gets all 3 values in to double form with only 1 read from sensor
+ */
+uint32_t mgos_bme280_read_all(struct mgos_bme280* bme, double *temperature, double *humidity, double *pressure, int32_t user_offset_temp);
+
+/*
  * Reads the temperature.
  * Returns MGOS_BME280_ERROR if error.
  */
