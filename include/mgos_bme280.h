@@ -76,6 +76,12 @@ int8_t mgos_bme280_read(struct mgos_bme280* bme, struct mgos_bme280_data* data);
 double mgos_bme280_read_temperature(struct mgos_bme280* bme);
 
 /*
+ * MendelScience custom function adapted frmo above function
+ */
+double mgos_bme280_custom_read_temperature(struct mgos_bme280* bme, int32_t user_offset_temp);
+
+
+/*
  * Reads the pressure.
  * Returns MGOS_BME280_ERROR if error.
  */

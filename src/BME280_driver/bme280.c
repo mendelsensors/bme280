@@ -185,6 +185,19 @@ static int32_t compensate_temperature(const struct bme280_uncomp_data *uncomp_da
     struct bme280_calib_data *calib_data);
 
 /*!
+ * @brief MendelScience customized temperature compensation function
+ *
+ * @param[in] uncomp_data : Contains the uncompensated temperature data.
+ * @param[in] calib_data : Pointer to calibration data structure.
+ * @param[in] user_offset : user temperature offset in hundreths (10^-2) of Celsius degrees.
+ *
+ * @return Compensated temperature data.
+ * @retval Compensated temperature data in integer.
+ */
+static int32_t custom_compensate_temperature(const struct bme280_uncomp_data *uncomp_data,
+    struct bme280_calib_data *calib_data, int32_t user_offset);
+
+/*!
  * @brief This internal API is used to compensate the raw pressure data and
  * return the compensated pressure data in integer data type.
  *
@@ -617,6 +630,38 @@ int8_t bme280_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data
 }
 
 /*!
+ * @brief Mendel customized function adapted from above function.
+ */
+int8_t bme280_custom_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data, struct bme280_dev *dev,int32_t user_offset_temp)
+{
+    int8_t rslt;
+    /* Array to store the pressure, temperature and humidity data read from
+    the sensor */
+    uint8_t reg_data[BME280_P_T_H_DATA_LEN] = {0};
+    struct bme280_uncomp_data uncomp_data = {0};
+
+    /* Check for null pointer in the device structure*/
+    rslt = null_ptr_check(dev);
+
+    if ((rslt == BME280_OK) && (comp_data != NULL)) {
+        /* Read the pressure and temperature data from the sensor */
+        rslt = bme280_get_regs(BME280_DATA_ADDR, reg_data, BME280_P_T_H_DATA_LEN, dev);
+
+        if (rslt == BME280_OK) {
+            /* Parse the read data from the sensor */
+            bme280_parse_sensor_data(reg_data, &uncomp_data);
+            /* Compensate the pressure and/or temperature and/or
+               humidity data from the sensor */
+            rslt = bme280_custom_compensate_data(sensor_comp, &uncomp_data, comp_data, &dev->calib_data, user_offset_temp);
+        }
+    } else {
+        rslt = BME280_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
  *  @brief This API is used to parse the pressure, temperature and
  *  humidity data and store it in the bme280_uncomp_data structure instance.
  */
@@ -664,6 +709,39 @@ int8_t bme280_compensate_data(uint8_t sensor_comp, const struct bme280_uncomp_da
         if (sensor_comp & (BME280_PRESS | BME280_TEMP | BME280_HUM)) {
             /* Compensate the temperature data */
             comp_data->temperature = compensate_temperature(uncomp_data, calib_data);
+        }
+        if (sensor_comp & BME280_PRESS) {
+            /* Compensate the pressure data */
+            comp_data->pressure = compensate_pressure(uncomp_data, calib_data);
+        }
+        if (sensor_comp & BME280_HUM) {
+            /* Compensate the humidity data */
+            comp_data->humidity = compensate_humidity(uncomp_data, calib_data);
+        }
+    } else {
+        rslt = BME280_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief mendelScience custom function adapted from above function.
+ */
+int8_t bme280_custom_compensate_data(uint8_t sensor_comp, const struct bme280_uncomp_data *uncomp_data,struct bme280_data *comp_data, struct bme280_calib_data *calib_data, int32_t user_offset_temp)
+{
+    int8_t rslt = BME280_OK;
+
+    if ((uncomp_data != NULL) && (comp_data != NULL) && (calib_data != NULL)) {
+        /* Initialize to zero */
+        comp_data->temperature = 0;
+        comp_data->pressure = 0;
+        comp_data->humidity = 0;
+        /* If pressure or temperature component is selected */
+        if (sensor_comp & (BME280_PRESS | BME280_TEMP | BME280_HUM)) {
+            /* Compensate the temperature data */
+            //comp_data->temperature = compensate_temperature(uncomp_data, calib_data);
+			comp_data->temperature = custom_compensate_temperature(uncomp_data, calib_data,user_offset_temp);			
         }
         if (sensor_comp & BME280_PRESS) {
             /* Compensate the pressure data */
@@ -1012,6 +1090,40 @@ static int32_t compensate_temperature(const struct bme280_uncomp_data *uncomp_da
 
     return temperature;
 }
+
+/*!
+ * @brief This mendelScience function is used to compensate the raw temperature data and
+ * return the compensated temperature data (plus a user offset) in integer data type.
+ */
+static int32_t custom_compensate_temperature(const struct bme280_uncomp_data *uncomp_data,
+    struct bme280_calib_data *calib_data, int32_t user_offset)
+{
+    int32_t var1;
+    int32_t var2;
+    int32_t temperature;
+    int32_t temperature_min = -4000;
+    int32_t temperature_max = 8500;
+
+    var1 = (int32_t) ((uncomp_data->temperature / 8) - ((int32_t) calib_data->dig_T1 * 2));
+    var1 = (var1 * ((int32_t) calib_data->dig_T2)) / 2048;
+    var2 = (int32_t) ((uncomp_data->temperature / 16) - ((int32_t) calib_data->dig_T1));
+    var2 = (((var2 * var2) / 4096) * ((int32_t) calib_data->dig_T3)) / 16384;
+    calib_data->t_fine = var1 + var2;
+    temperature = (calib_data->t_fine * 5 + 128) / 256;
+
+	//adjust temperature with user_offset (in hundreds of celcius degrees 10^-2)
+    temperature += user_offset;
+    calib_data->t_fine= ((temperature*256)-128)/5; //pressure and humidity compensation functions use this value
+
+    if (temperature < temperature_min)
+        temperature = temperature_min;
+    else if (temperature > temperature_max)
+        temperature = temperature_max;
+
+    return temperature;
+}
+
+
 #ifdef BME280_64BIT_ENABLE
 
 /*!

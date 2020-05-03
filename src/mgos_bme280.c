@@ -309,6 +309,27 @@ static int8_t mgos_bme280_get_sensor_data(uint8_t sensor_comp, struct bme280_dat
     return rslt;
 }
 
+static int8_t mgos_bme280_custom_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data, struct mgos_bme280 *bme, int32_t user_offset_temp)
+{
+    double start = mg_time();
+
+    if (NULL == bme) {
+        return -1;
+    }
+
+    bme->stats.read++;
+
+    int8_t rslt=bme280_custom_get_sensor_data(sensor_comp, comp_data, &bme->dev, user_offset_temp);
+
+    if (BME280_OK == rslt) {
+        bme->stats.read_success++;
+        bme->stats.read_success_usecs+=1000000*(mg_time()-start);
+        bme->stats.last_read_time=start;
+    }
+
+    return rslt;
+}
+
 int8_t mgos_bme280_read(struct mgos_bme280* bme, struct mgos_bme280_data* data)
 {
 
@@ -349,6 +370,24 @@ double mgos_bme280_read_temperature(struct mgos_bme280* bme)
     }
     return result;
 }
+
+double mgos_bme280_custom_read_temperature(struct mgos_bme280* bme, int32_t user_offset_temp)
+{
+    struct bme280_data comp_data;
+    int8_t rslt = mgos_bme280_custom_get_sensor_data(BME280_TEMP, &comp_data, bme, user_offset_temp);
+    double result;
+    if (BME280_OK == rslt) {
+#ifdef BME280_FLOAT_ENABLE
+        result = comp_data.temperature;
+#else
+        result = comp_data.temperature / 100.0;
+#endif
+    } else {
+        result = MGOS_BME280_ERROR;
+    }
+    return result;
+}
+
 
 double mgos_bme280_read_pressure(struct mgos_bme280* bme)
 {

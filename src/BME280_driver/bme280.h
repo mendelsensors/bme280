@@ -205,6 +205,28 @@ int8_t bme280_soft_reset(const struct bme280_dev *dev);
 int8_t bme280_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data, struct bme280_dev *dev);
 
 /*!
+ * @brief MendelScience function adapted from above
+ *
+ * @param[in] sensor_comp : Variable which selects which data to be read from
+ * the sensor.
+ *
+ * sensor_comp |   Macros
+ * ------------|-------------------
+ *     1       | BME280_PRESS
+ *     2       | BME280_TEMP
+ *     4       | BME280_HUM
+ *     7       | BME280_ALL
+ *
+ * @param[out] comp_data : Structure instance of bme280_data.
+ * @param[in] dev : Structure instance of bme280_dev.
+ * @param[in] user_offset_temp : user temperature offset in 10^-2 degrees celsius
+ *
+ * @return Result of API execution status
+ * @retval zero -> Success / +ve value -> Warning / -ve value -> Error
+ */
+int8_t bme280_custom_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data, struct bme280_dev *dev, int32_t user_offset_temp);
+
+/*!
  *  @brief This API is used to parse the pressure, temperature and
  *  humidity data and store it in the bme280_uncomp_data structure instance.
  *
@@ -232,6 +254,23 @@ void bme280_parse_sensor_data(const uint8_t *reg_data, struct bme280_uncomp_data
  */
 int8_t bme280_compensate_data(uint8_t sensor_comp, const struct bme280_uncomp_data *uncomp_data,
 				     struct bme280_data *comp_data, struct bme280_calib_data *calib_data);
+
+/*!
+ * @brief mendelScience adpated function from above.
+ *
+ * @param[in] sensor_comp : Used to select pressure and/or temperature and/or
+ * humidity.
+ * @param[in] uncomp_data : Contains the uncompensated pressure, temperature and
+ * humidity data.
+ * @param[out] comp_data : Contains the compensated pressure and/or temperature
+ * and/or humidity data.
+ * @param[in] calib_data : Pointer to the calibration data structure.
+ * @param[in] user_offset_temp : User temperature offset in 10^-2 degrees Celsius.
+ *
+ * @return Result of API execution status.
+ * @retval zero -> Success / -ve value -> Error
+ */
+int8_t bme280_custom_compensate_data(uint8_t sensor_comp, const struct bme280_uncomp_data *uncomp_data,struct bme280_data *comp_data, struct bme280_calib_data *calib_data, int32_t user_offset_temp);
 
 #ifdef __cplusplus
 }
