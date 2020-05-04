@@ -357,7 +357,7 @@ int8_t mgos_bme280_read(struct mgos_bme280* bme, struct mgos_bme280_data* data)
 uint32_t mgos_bme280_read_all(struct mgos_bme280* bme, double *temperature, double *humidity, double *pressure, int32_t user_offset_temp)
 {
    struct bme280_data comp_data;
-   int8_t rslt = mgos_bme280_custom_get_sensor_data(BME280_TEMP, &comp_data, bme, user_offset_temp);
+   int8_t rslt = mgos_bme280_custom_get_sensor_data(BME280_TEMP | BME280_PRESS | BME280_HUM, &comp_data, bme, user_offset_temp);
    if (BME280_OK == rslt) {
 #ifdef BME280_FLOAT_ENABLE
         *temperature = comp_data.temperature;
@@ -394,7 +394,7 @@ double mgos_bme280_read_temperature(struct mgos_bme280* bme)
 double mgos_bme280_custom_read_temperature(struct mgos_bme280* bme, int32_t user_offset_temp)
 {
     struct bme280_data comp_data;
-    int8_t rslt = mgos_bme280_custom_get_sensor_data(BME280_TEMP | BME280_PRESS | BME280_HUM, &comp_data, bme, user_offset_temp);
+    int8_t rslt = mgos_bme280_custom_get_sensor_data(BME280_TEMP, &comp_data, bme, user_offset_temp);
     double result;
     if (BME280_OK == rslt) {
 #ifdef BME280_FLOAT_ENABLE
