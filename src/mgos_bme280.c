@@ -185,7 +185,7 @@ static int8_t commonInit(struct mgos_bme280* bme)
     }
 
     /* Recommended mode of operation: Indoor navigation */
-    bme->dev.settings.osr_h = BME280_OVERSAMPLING_16X;//BME280_OVERSAMPLING_1X;
+    bme->dev.settings.osr_h = BME280_OVERSAMPLING_1X;
     bme->dev.settings.osr_p = BME280_NO_OVERSAMPLING;//BME280_OVERSAMPLING_16X;
     bme->dev.settings.osr_t = BME280_OVERSAMPLING_1X;//BME280_OVERSAMPLING_2X;
     bme->dev.settings.filter = BME280_FILTER_COEFF_OFF; //BME280_FILTER_COEFF_16;
@@ -205,8 +205,8 @@ static int8_t commonInit(struct mgos_bme280* bme)
         return rslt;
     }
 
-    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &bme->dev);
-//    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &bme->dev);
+    //rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &bme->dev);
+    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &bme->dev);
     if (BME280_OK != rslt) {
         LOG(LL_INFO, ("Could not set sensor mode"));
         return rslt;
