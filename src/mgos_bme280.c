@@ -205,8 +205,8 @@ static int8_t commonInit(struct mgos_bme280* bme)
         return rslt;
     }
 
-//    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &bme->dev);
-    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &bme->dev);
+    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &bme->dev);
+//    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &bme->dev);
     if (BME280_OK != rslt) {
         LOG(LL_INFO, ("Could not set sensor mode"));
         return rslt;
